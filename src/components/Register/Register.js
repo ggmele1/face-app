@@ -6,7 +6,8 @@ class Register extends React.Component {
     this.state = {
       email: '',
       password: '',
-      name: ''
+      name: '',
+      userExist: false,
     }
   }
 
@@ -22,23 +23,32 @@ class Register extends React.Component {
     this.setState({password: event.target.value})
   }
 
-  onSubmitSignIn = () => {
-    fetch('http://localhost:3000/register', {
-      method: 'post',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({
-        email: this.state.email,
-        password: this.state.password,
-        name: this.state.name
+  onSubmitRegister = () => {
+    const { email, password, name } = this.state;
+    if (email.length && password.length && name.length > 0) {
+      fetch('http://localhost:3000/register', {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          email: this.state.email,
+          password: this.state.password,
+          name: this.state.name
+        })
       })
-    })
-      .then(response => response.json())
-      .then(user => {
-        if (user) {
-          this.props.loadUser(user)
-          this.props.onRouteChange('home');
-        }
-      })
+        .then(response => response.json())
+        .then(user => {
+          if (user === 'error') {
+            console.log("user already exists")
+            this.setState({userExist: true})
+          } else {
+            console.log(user)
+            this.props.loadUser(user)
+            this.props.onRouteChange('home');
+          }
+        })
+    } else {
+      console.log("incorrect credentials")
+    }
   }
 
   render() {
@@ -48,6 +58,7 @@ class Register extends React.Component {
           <div className="measure">
             <fieldset id="sign_up" className="ba b--transparent ph0 mh0">
               <legend className="f1 fw6 ph0 mh0">Register</legend>
+              {!this.userExist ? null : <div>Sorry, this email already exist.</div>}
               <div className="mt3">
                 <label className="db fw6 lh-copy f6" htmlFor="name">Name</label>
                 <input
@@ -81,7 +92,7 @@ class Register extends React.Component {
             </fieldset>
             <div className="">
               <input
-                onClick={this.onSubmitSignIn}
+                onClick={this.onSubmitRegister}
                 className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
                 type="submit"
                 value="Register"
